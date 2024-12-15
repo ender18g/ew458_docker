@@ -1,0 +1,50 @@
+version: '3.8'
+
+services:
+  ros2_talker:
+    image: ros2
+    container_name: ros2_talker
+    environment:
+      - ROS_DOMAIN_ID=1
+    command: ros2 run demo_nodes_cpp talker
+    restart: unless-stopped
+    networks:
+      - local_network
+
+  web:
+    image: nginx:alpine
+    ports:
+      - "8000:80"
+    volumes:
+      - ./index.html:/usr/share/nginx/html/index.html:ro
+    restart: unless-stopped
+
+
+
+  rosbridge_1:
+    image: ros2
+    container_name: rosbridge_1
+    environment:
+      - ROS_DOMAIN_ID=1
+    ports:
+      - "9091:9090"
+    command: ros2 launch rosbridge_server rosbridge_websocket_launch.xml
+    restart: unless-stopped
+    networks:
+      - local_network
+
+  rosbridge_2:
+    image: ros2
+    container_name: rosbridge_2
+    environment:
+      - ROS_DOMAIN_ID=2
+    ports:
+      - "9092:9090"
+    command: ros2 launch rosbridge_server rosbridge_websocket_launch.xml
+    restart: unless-stopped
+    networks:
+      - local_network
+
+networks:
+  local_network:
+    driver: bridge

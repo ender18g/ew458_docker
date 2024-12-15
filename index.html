@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ROS2 Topic Viewer and Publisher</title>
+    <script src="https://cdn.jsdelivr.net/npm/roslib/build/roslib.min.js"></script>
+</head>
+<body>
+    <h1>ROS2 Topic Viewer and Publisher</h1>
+
+    <div>
+        <h2>Connect to ROS Bridge</h2>
+        <input type="text" id="ip-address" placeholder="Enter IP address (e.g., 127.0.0.1)" value="127.0.0.1">
+        <input type="text" id="port" placeholder="Enter port (e.g., 9091)" value="9091">
+        <button id="connect-button">Connect</button>
+    </div>
+
+    <div>
+        <h2>Available Topics</h2>
+        <ul id="topics-list"></ul>
+    </div>
+
+    <div>
+        <h2>Messages from /chatter</h2>
+        <textarea id="chatter-messages" rows="10" cols="50" readonly></textarea>
+    </div>
+
+    <div>
+        <h2>Publish to /chatter</h2>
+        <input type="text" id="chatter-input" placeholder="Type a message...">
+        <button id="publish-button">Publish</button>
+    </div>
+
+    <script>
+        let ros;
+        let chatterTopic;
+
+        const connectToRos = () => {
+            const ipAddress = document.getElementById('ip-address').value || '127.0.0.1';
+            const port = document.getElementById('port').value || '9091';
+            const url = `ws://${ipAddress}:${port}`;
+
+            if (ros) {
+                ros.close();
+            }
+
+            ros = new ROSLIB.Ros({ url });
+
+            ros.on('connection', () => {
+                console.log(`Connected to ROS bridge at ${url}`);
+                setupChatterListener();
+            });
+
+            ros.on('error', (error) => {
+                console.error('Error connecting to ROS bridge:', error);
+            });
+
+            ros.on('close', () => {
+                console.log('Disconnected from ROS bridge.');
+            });
+        };
+
+        document.getElementById('connect-button').addEventListener('click', connectToRos);
+
+        const listTopics = () => {
+            if (!ros) return;
+
+            const topicsClient = new ROSLIB.Service({
+                ros: ros,
+                name: '/rosapi/topics',
+                serviceType: 'rosapi/Topics'
+            });
+
+            const request = new ROSLIB.ServiceRequest({});
+
+            topicsClient.callService(request, (result) => {
+                const topicsList = document.getElementById('topics-list');
+                topicsList.innerHTML = '';
+                result.topics.forEach((topic) => {
+                    const listItem = document.createElement('li');
+                    listItem.textContent = topic;
+                    topicsList.appendChild(listItem);
+                });
+            });
+        };
+
+        const setupChatterListener = () => {
+            if (chatterTopic) {
+                chatterTopic.unsubscribe();
+            }
+
+            chatterTopic = new ROSLIB.Topic({
+                ros: ros,
+                name: '/chatter',
+                messageType: 'std_msgs/String'
+            });
+
+            chatterTopic.subscribe((message) => {
+                const messagesTextArea = document.getElementById('chatter-messages');
+                messagesTextArea.value += `Received: ${message.data}\n`;
+                messagesTextArea.scrollTop = messagesTextArea.scrollHeight;
+            });
+        };
+
+        document.getElementById('publish-button').addEventListener('click', () => {
+            if (!ros) return;
+
+            const inputField = document.getElementById('chatter-input');
+            const message = new ROSLIB.Message({
+                data: inputField.value
+            });
+
+            const chatterPublisher = new ROSLIB.Topic({
+                ros: ros,
+                name: '/chatter',
+                messageType: 'std_msgs/String'
+            });
+
+            chatterPublisher.publish(message);
+            inputField.value = '';
+        });
+
+        setInterval(() => {
+            if (ros && ros.isConnected) {
+                listTopics();
+            }
+        }, 5000);
+    </script>
+</body>
+</html>
