@@ -10,7 +10,7 @@ def main():
 
     # Step 1: Connect to the ROS bridge
     # Replace '172.0.0.1' with the actual IP address of your ROS bridge if needed
-    client = roslibpy.Ros(host='127.0.0.1', port=9091)
+    client = roslibpy.Ros(host='192.168.7.53', port=9091)
 
     print('Attempting to connect to ROS bridge...')
     client.run()
