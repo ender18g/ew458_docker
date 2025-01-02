@@ -1,0 +1,17 @@
+# Common configuration for all services
+x-common: &common
+  env_file:
+    - .env
+  volumes:
+      - /dev/shm:/dev/shm
+      - ./fastrtps.xml:/fastrtps.xml
+  network_mode: host
+  restart: unless-stopped
+
+# docker-compose.yml
+
+services:
+  ros2_with_ssh:
+    <<: *common
+    build: .
+    container_name: ros2_with_ssh
