@@ -6,6 +6,7 @@ x-common: &common
       - /dev/shm:/dev/shm
       - ./fastrtps.xml:/fastrtps.xml
   network_mode: host
+  restart: unless-stopped
 
 
 services:  
@@ -26,16 +27,11 @@ services:
       - ./index.html:/usr/share/nginx/html/index.html
     ports:
       - "8080:80"
+    restart: unless-stopped
   
-  ros2-humble-list:
-    <<: *common
-    build: .
-    container_name: ros2_humble_list
-    environment:
-      - ROS_DOMAIN_ID=12                     # Set Domain ID to 12
-    command: bash -c "source /opt/ros/humble/setup.bash &&
-                        while true; do ros2 topic list; sleep 2; ros2 node list; sleep 2; done"
-                        
+
+
+
 
 # make an image to run dds discovery server
   ros2-discovery:
