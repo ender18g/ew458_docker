@@ -9,6 +9,7 @@ x-common: &common
   restart: unless-stopped
 
 
+# DOMAIN ID 12 ROSBRIDGE
 services:  
   ros2-bridge-12:
     <<: *common
@@ -20,6 +21,8 @@ services:
     command: bash -c "source /opt/ros/humble/setup.bash &&
                         ros2 launch rosbridge_server rosbridge_websocket_launch.xml port:=9012"
 
+
+# WEB HOST
   web-host:
     image: nginx:alpine
     container_name: web_host
@@ -30,10 +33,7 @@ services:
     restart: unless-stopped
   
 
-
-
-
-# make an image to run dds discovery server
+# DDS DISCOVERY SERVER
   ros2-discovery:
     <<: *common
     image: ros:humble-ros-base
