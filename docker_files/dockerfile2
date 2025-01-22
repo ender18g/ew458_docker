@@ -1,0 +1,43 @@
+# Use official ROS 2 Humble base image
+FROM ros:humble
+
+# Set environment variables for non-interactive installation
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Update and install necessary packages
+RUN apt-get update && apt-get install -y \
+    git \
+    python3-pip \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install colcon for building ROS 2 workspaces
+RUN pip3 install colcon-common-extensions
+
+# Create a ROS 2 workspace
+WORKDIR /root/ros2_ws
+RUN mkdir -p src
+
+# Clone the rosbridge_suite repository from GitHub
+RUN git clone --branch ros2 https://github.com/RobotWebTools/rosbridge_suite.git src/rosbridge_suite
+
+# Install dependencies using rosdep
+RUN apt-get update && rosdep update && \
+    rosdep install --from-paths src --ignore-src -r -y
+
+# Build the workspace
+RUN . /opt/ros/humble/setup.bash && colcon build
+
+# Install additional example packages (talker, listener, teleop, etc.)
+RUN apt-get update && apt-get install -y \
+    ros-${ROS_DISTRO}-demo-nodes-cpp \
+    ros-${ROS_DISTRO}-teleop-twist-keyboard \
+    ros-${ROS_DISTRO}-irobot-create-msgs \
+    && rm -rf /var/lib/apt/lists/*
+
+# Source the ROS and workspace setup scripts for all shells
+RUN echo "source /opt/ros/humble/setup.bash" >> ~/.bashrc && \
+    echo "source /root/ros2_ws/install/setup.bash" >> ~/.bashrc
+
+# Set the default command to open a shell
+CMD ["/bin/bash"]
