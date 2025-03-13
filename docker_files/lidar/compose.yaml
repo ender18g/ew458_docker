@@ -4,6 +4,8 @@ x-common: &common
   volumes:
     - ./fastrtps.xml:/fastrtps.xml
     - /dev:/dev
+    - ./ydlidar_launch.py:/ros2_ws/install/ydlidar_ros2_driver/share/ydlidar_ros2_driver/ydlidar_launch2.py
+    - ./TG.yaml:/TG.yaml
   network_mode: host
   restart: unless-stopped
 
@@ -15,4 +17,4 @@ services:
     command: >
       bash -c "source /opt/ros/humble/setup.bash &&
                source /ros2_ws/install/setup.bash &&
-               ros2 launch ydlidar_ros2_driver ydlidar_launch.py"
+               ros2 launch ydlidar_ros2_driver ydlidar_launch2.py"
